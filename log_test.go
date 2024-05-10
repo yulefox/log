@@ -16,15 +16,17 @@ func TestLogger(t *testing.T) {
 	var wg sync.WaitGroup
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
-		Info("test", "This is a named logger", i, i+1)
+		Info("test", "This is a named logger ", "hello ", i, i+1, i == 2)
 		go func() {
-			logger, err := GetLogger("named")
+			logger, err := GetLogger("named", func(options *Options) error {
+				return nil
+			})
 			if err != nil {
 				t.Errorf("Failed to get named logger")
 			}
 			logger.Error("This is a named logger ", i, i+1)
-			Error("test", "This is a named logger", i)
-			logger.Info("This is a named logger", i)
+			Error("test", "This is a named logger ", i)
+			logger.Info("This is a named logger ", i)
 			logger.Info("This is a named logger")
 			logger.Warn("This is a logger: %s", "named")
 			logger.Error("This is a named logger")

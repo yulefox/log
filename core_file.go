@@ -1,4 +1,4 @@
-package core
+package log
 
 import (
 	"fmt"
@@ -6,11 +6,15 @@ import (
 	"strings"
 )
 
-type FileEncoder struct{}
+type FileEncoder struct {
+}
 
 func NewFileCore(name string) *Core {
+	if name == "" {
+		name = "app"
+	}
 	_ = os.MkdirAll("./logs", 0755)
-	infoFile, err := os.OpenFile(fmt.Sprintf("logs/%s.log", name), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	allFile, err := os.OpenFile(fmt.Sprintf("logs/%s.log", name), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 	if err != nil {
 		panic(err)
 	}
@@ -20,9 +24,9 @@ func NewFileCore(name string) *Core {
 	}
 
 	return &Core{
-		infoWriter: infoFile,
-		errWriter:  errFile,
-		encoder:    new(FileEncoder),
+		allWriter: allFile,
+		errWriter: errFile,
+		encoder:   new(FileEncoder),
 	}
 }
 

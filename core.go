@@ -1,4 +1,4 @@
-package core
+package log
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ type Encoder interface {
 }
 
 type Core struct {
+	allWriter  io.Writer
 	infoWriter io.Writer
 	errWriter  io.Writer
 	encoder    Encoder
@@ -27,10 +28,15 @@ func (c *Core) Write(ac *Action, params ...any) {
 	}
 
 	defer buffer.close()
+	if c.allWriter != nil {
+		fmt.Fprint(c.allWriter, buffer.String(), "\n")
+	}
 	switch ac.Level {
 	case ERRO, PNIC, FATL:
 		fmt.Fprint(c.errWriter, buffer.String(), "\n")
 	default:
-		fmt.Fprint(c.infoWriter, buffer.String(), "\n")
+		if c.infoWriter != nil {
+			fmt.Fprint(c.infoWriter, buffer.String(), "\n")
+		}
 	}
 }

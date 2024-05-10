@@ -1,6 +1,7 @@
-package core
+package log
 
 const (
+	DefaultName       = ""
 	DefaultLevel      = DEBU
 	DefaultSkip       = 3
 	DefaultAddCaller  = true

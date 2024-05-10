@@ -1,4 +1,4 @@
-package core
+package log
 
 import (
 	"fmt"
@@ -6,22 +6,20 @@ import (
 	"strings"
 )
 
+type Action struct {
+	*Options
+	Level      Level
+	Date       string
+	Caller     string
+	Stack      []string
+	AfterWrite func()
+}
+
 type Param map[string]any
 
 type Array struct {
 	K string
 	V any
-}
-
-func parseParams(params ...any) any {
-	if len(params) == 0 {
-		return nil
-	}
-	format, ok := params[0].(string)
-	if ok && strings.ContainsRune(format, '%') {
-		return fmt.Sprintf(format, params[1:]...)
-	}
-	return params
 }
 
 func (p Param) String() string {
@@ -42,4 +40,17 @@ func (p Param) String() string {
 	}
 
 	return strings.TrimSuffix(result.String(), " ")
+}
+
+func (a *Action) Write(params ...any) {
+	for _, core := range a.Cores {
+		if core == nil {
+			continue
+		}
+		core.Write(a, params...)
+	}
+
+	if a.AfterWrite != nil {
+		a.AfterWrite()
+	}
 }

@@ -15,16 +15,10 @@ package main
 import "github.com/yulefox/log"
 
 func main() {
-	// 使用示例
-	for i := 0; i < 100; i++ {
-		go func() {
-			log.Debug("debug")
-			log.Info("info")
-			log.Warn("warn")
-			log.Error("error")
-			log.Fatal("fatal")
-		}
-    }
+	log.Info("tag", "Here is a simple example.")
+	log.Debug("main", "This is a debug message.")
+	log.Info("", "Hello, %s!", "world")
+	log.Error("", "This is an error with caller stack.")
 }
 ```
 
