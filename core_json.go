@@ -2,59 +2,46 @@ package log
 
 import (
 	"encoding/json"
-	"os"
+	"io"
+	"unsafe"
 )
 
 type JsonEncoder struct {
 }
 
 type structureLog struct {
-	Name     string      `json:"name,omitempty"`
-	Level    Level       `json:"level"`
-	Date     string      `json:"date,omitempty"`
-	Caller   string      `json:"caller,omitempty"`
-	Category string      `json:"category"`
-	Reason   string      `json:"reason"`
-	Params   interface{} `json:"params,omitempty"`
-	Stack    []string    `json:"stack,omitempty"`
+	Tag    string      `json:"tag,omitempty"`
+	Level  Level       `json:"level"`
+	Date   string      `json:"date,omitempty"`
+	Caller string      `json:"caller,omitempty"`
+	Params interface{} `json:"params,omitempty"`
+	Stack  []string    `json:"stack,omitempty"`
 }
 
-func action2Structure(ac *Action) *structureLog {
-	return &structureLog{
-		Name:   ac.Name,
+func NewJsonCore(writer io.Writer) *Core {
+	return &Core{
+		allWriter: writer,
+		encoder:   new(JsonEncoder),
+	}
+}
+
+func (e *JsonEncoder) Encode(ac *Action, params []any) string {
+	if ac == nil {
+		return ""
+	}
+
+	buf, err := json.Marshal(&structureLog{
+		Tag:    ac.Tag,
 		Date:   ac.Date,
 		Level:  ac.Level,
 		Caller: ac.Caller,
 		Stack:  ac.Stack,
-	}
-}
-
-func NewJsonCore() *Core {
-	return &Core{
-		infoWriter: os.Stdout,
-		errWriter:  os.Stderr,
-		encoder:    new(JsonEncoder),
-	}
-}
-
-func (e *JsonEncoder) Encode(ac *Action, params []any) *Buffer {
-	if ac == nil {
-		return nil
-	}
-
-	s := action2Structure(ac)
-	s.Params = params
-
-	data, err := json.Marshal(s)
+		Params: params,
+	})
 
 	if err != nil {
-		return nil
+		return ""
 	}
 
-	cache := bufferPool.Get().(*Buffer)
-	if _, err := cache.Write(data); err != nil {
-		return nil
-	}
-
-	return cache
+	return unsafe.String(unsafe.SliceData(buf), len(buf))
 }

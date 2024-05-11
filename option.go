@@ -1,5 +1,7 @@
 package log
 
+import "time"
+
 const (
 	DefaultName       = ""
 	DefaultLevel      = DEBU
@@ -13,9 +15,6 @@ type Option func(*Options) error
 
 // Options can be used to create a customized logger.
 type Options struct {
-	// Name is an optional name for the logger.
-	Name string
-
 	// TimeFormat is the time format for log entries.
 	TimeFormat string
 
@@ -30,16 +29,18 @@ type Options struct {
 
 	// Cores is a list of Cores the logger should write to.
 	Cores []*Core
+
+	Now func() time.Time
 }
 
 // GetDefaultOptions returns default configuration options for the client.
-func GetDefaultOptions(name string) Options {
+func GetDefaultOptions() Options {
 	return Options{
-		Name:       name,
 		Level:      DefaultLevel,
 		TimeFormat: DefaultTimeFormat,
 		AddCaller:  DefaultAddCaller,
 		Skip:       DefaultSkip,
-		Cores:      []*Core{NewTermCore(), NewFileCore(name)},
+		Now:        time.Now,
+		Cores:      []*Core{NewTermCore()},
 	}
 }

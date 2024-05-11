@@ -77,8 +77,8 @@ var (
 
 	debuShader = Shader{
 		args: []int{
-			FGC_LIGHTGREY,
-			BGC_LIGHTWHITE,
+			FGC_LIGHTWHITE,
+			BGC_LIGHTGREY,
 		},
 	}
 

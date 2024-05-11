@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 	"sync/atomic"
@@ -10,6 +11,8 @@ import (
 
 const (
 	Version = "0.1.0"
+	AppName = "APP_NAME"
+	AppMode = "APP_MODE"
 )
 
 var (
@@ -20,13 +23,49 @@ type Logger struct {
 	Options Options `json:"options"`
 }
 
-func getLogger(options ...Option) *Logger {
-	name := os.Getenv("APP_NAME")
-	if logger := _logger.Load(); logger != nil {
-		return logger
+// SetCaller Set whether to show caller
+func SetCaller(show bool) Option {
+	return func(o *Options) error {
+		o.AddCaller = show
+		return nil
 	}
+}
 
-	opts := GetDefaultOptions(name)
+// SetLevel Set log level
+func SetLevel(level Level) Option {
+	return func(o *Options) error {
+		o.Level = level
+		return nil
+	}
+}
+
+// SetTimeFormat Set time format
+func SetTimeFormat(format string, nowFunc func() time.Time) Option {
+	return func(o *Options) error {
+		o.TimeFormat = format
+		o.Now = nowFunc
+		return nil
+	}
+}
+
+// AddFileLogger Add file logger
+func AddFileLogger(name string) Option {
+	return func(o *Options) error {
+		o.Cores = append(o.Cores, NewFileCore(name))
+		return nil
+	}
+}
+
+// AddJsonLogger Add json logger
+func AddJsonLogger(writer io.Writer) Option {
+	return func(o *Options) error {
+		o.Cores = append(o.Cores, NewJsonCore(writer))
+		return nil
+	}
+}
+
+func Init(options ...Option) *Logger {
+	opts := GetDefaultOptions()
 	for _, opt := range options {
 		if opt != nil {
 			if err := opt(&opts); err != nil {
@@ -42,23 +81,31 @@ func getLogger(options ...Option) *Logger {
 	return logger
 }
 
-func (l *Logger) do(level Level, tag string, params ...any) {
-	if level < l.Options.Level {
+func getLogger(options ...Option) *Logger {
+	if logger := _logger.Load(); logger != nil {
+		return logger
+	}
+
+	return Init(options...)
+}
+
+func (o Options) do(level Level, tag string, params ...any) {
+	if level < o.Level {
 		return
 	}
 
 	ac := &Action{
 		Level:   level,
-		Options: &l.Options,
+		Options: &o,
 	}
 
-	if l.Options.TimeFormat != "" {
-		ac.Date = time.Now().Format(l.Options.TimeFormat)
+	if o.TimeFormat != "" {
+		ac.Date = o.Now().Format(o.TimeFormat)
 	}
 
-	if l.Options.AddCaller || ac.Level >= ERRO {
+	if o.AddCaller || ac.Level >= ERRO {
 		var pc [10]uintptr
-		n := runtime.Callers(l.Options.Skip, pc[:])
+		n := runtime.Callers(o.Skip, pc[:])
 		if n > 0 {
 			callers := pc[:n]
 			frames := runtime.CallersFrames(callers)
@@ -70,64 +117,72 @@ func (l *Logger) do(level Level, tag string, params ...any) {
 					frame.Function,
 				)
 			}
-			if l.Options.AddCaller {
+			if o.AddCaller {
 				ac.Caller = fmt.Sprintf("%v:%v",
 					TrimPath(frame.File),
 					frame.Line)
 			}
 
-			switch ac.Level {
-			case ERRO, PNIC, FATL:
+			addFrames := func() {
 				for more {
 					ac.Stack = append(ac.Stack, caller())
 					frame, more = frames.Next()
+				}
+			}
+			switch ac.Level {
+			case ERRO:
+				addFrames()
+			case FATL:
+				addFrames()
+				ac.AfterWrite = func() {
+					os.Exit(1)
+				}
+			case PNIC:
+				addFrames()
+				ac.AfterWrite = func() {
+					panic(params)
 				}
 			default:
 			}
 		}
 	}
-	if level == FATL {
-		ac.AfterWrite = func() {
-			os.Exit(1)
-		}
-	}
 
-	ac.Name = tag
+	ac.Tag = tag
 	ac.Write(params...)
 }
 
 func Debug(tag string, params ...any) {
 	if l := getLogger(); l != nil {
-		l.do(DEBU, tag, params...)
+		l.Options.do(DEBU, tag, params...)
 	}
 }
 
 func Info(tag string, params ...any) {
 	if l := getLogger(); l != nil {
-		l.do(INFO, tag, params...)
+		l.Options.do(INFO, tag, params...)
 	}
 }
 
 func Warn(tag string, params ...any) {
 	if l := getLogger(); l != nil {
-		l.do(WARN, tag, params...)
+		l.Options.do(WARN, tag, params...)
 	}
 }
 
 func Error(tag string, params ...any) {
 	if l := getLogger(); l != nil {
-		l.do(ERRO, tag, params...)
+		l.Options.do(ERRO, tag, params...)
 	}
 }
 
 func Panic(tag string, params ...any) {
 	if l := getLogger(); l != nil {
-		l.do(PNIC, tag, params...)
+		l.Options.do(PNIC, tag, params...)
 	}
 }
 
 func Fatal(tag string, params ...any) {
 	if l := getLogger(); l != nil {
-		l.do(FATL, tag, params...)
+		l.Options.do(FATL, tag, params...)
 	}
 }
