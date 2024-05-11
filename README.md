@@ -2,7 +2,7 @@
 
 [//]: # (<img align="right" width="159px" src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png">)
 
-[![Build Status](https://github.com/yulefox/log/workflows/Run%20Tests/badge.svg?branch=master)](https://github.com/yulefox/log/actions?query=branch%3Amaster)
+[![Build Status](https://github.com/yulefox/log/workflows/Run%20Tests/badge.svg?branch=main)](https://github.com/yulefox/log/actions?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/yulefox/log/branch/master/graph/badge.svg)](https://codecov.io/gh/yulefox/log)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yulefox/log)](https://goreportcard.com/report/github.com/yulefox/log)
 [![GoDoc](https://pkg.go.dev/badge/github.com/yulefox/log?status.svg)](https://pkg.go.dev/github.com/yulefox/log?tab=doc)
