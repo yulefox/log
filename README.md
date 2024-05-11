@@ -19,6 +19,9 @@ func main() {
 	log.Debug("main", "This is a debug message.")
 	log.Info("", "Hello, %s!", "world")
 	log.Error("", "This is an error with caller stack.")
+	log.Panic("panic", "This is a panic with caller stack.")
+	//log.Fatal("fatal", "This should not be logged.")
+	//log.Info("info", "This should not be logged.")
 }
 ```
 
@@ -29,34 +32,3 @@ func main() {
 ## License
 
 MIT
-
-## Contributing
-
-## Changelog
-
-## Credits
-
-## Contact
-
-## References
-
-## See Also
-
-## Acknowledgements
-
-## Appendix
-
-## FAQ
-
-## License
-
-## Support
-
-## Troubleshooting
-
-## Versioning
-
-## Authors
-
-## Acknowledgments
-

@@ -1,12 +1,12 @@
 package log
 
 import (
-	"fmt"
 	"io"
+	"unsafe"
 )
 
 type Encoder interface {
-	Encode(ac *Action, params []any) *Buffer
+	Encode(ac *Action, params []any) string
 }
 
 type Core struct {
@@ -22,21 +22,24 @@ func (c *Core) Write(ac *Action, params ...any) {
 		return
 	}
 
-	buffer := e.Encode(ac, params)
-	if buffer == nil {
-		return
-	}
-
-	defer buffer.close()
+	str := e.Encode(ac, params) + "\n"
+	buff := *(*[]byte)(unsafe.Pointer(
+		&struct {
+			string
+			Cap int
+		}{str, len(str)},
+	))
 	if c.allWriter != nil {
-		fmt.Fprint(c.allWriter, buffer.String(), "\n")
+		c.allWriter.Write(buff)
 	}
 	switch ac.Level {
 	case ERRO, PNIC, FATL:
-		fmt.Fprint(c.errWriter, buffer.String(), "\n")
+		if c.errWriter != nil {
+			c.errWriter.Write(buff)
+		}
 	default:
 		if c.infoWriter != nil {
-			fmt.Fprint(c.infoWriter, buffer.String(), "\n")
+			c.infoWriter.Write(buff)
 		}
 	}
 }

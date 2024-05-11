@@ -16,29 +16,28 @@ func NewTermCore() *Core {
 	}
 }
 
-func (e *TermEncoder) Encode(ac *Action, params []any) *Buffer {
+func (e *TermEncoder) Encode(ac *Action, params []any) string {
 	if ac == nil {
-		return nil
+		return ""
 	}
 
 	w := bufferPool.Get().(*Buffer)
+	defer w.close()
+
+	if ac.Date != "" {
+		w.WriteString(ac.Date + " ")
+	}
 	shader := shaderByLv(ac.Level)
 	if shader != nil {
 		w.WriteString(shader.do(ac.Level.String()))
 	} else {
 		w.WriteString(ac.Level.String())
 	}
-
-	if ac.Date != "" {
-		w.WriteString(" " + ac.Date)
-	}
-
 	if ac.AddCaller && ac.Caller != "" {
 		w.WriteString(" " + ac.Caller)
 	}
-
-	if ac.Name != "" {
-		w.WriteString(" [" + ac.Name + "]")
+	if ac.Tag != "" {
+		w.WriteString(" [" + ac.Tag + "]")
 	}
 
 	if params != nil {
@@ -46,20 +45,20 @@ func (e *TermEncoder) Encode(ac *Action, params []any) *Buffer {
 		format, ok := params[0].(string)
 		if ok && strings.ContainsRune(format, '%') {
 			if _, err := fmt.Fprintf(w, format, params[1:]...); err != nil {
-				return w
+				return ""
 			}
 		} else {
 			if _, err := fmt.Fprint(w, params...); err != nil {
-				return w
+				return ""
 			}
 		}
 	}
 
 	for i, layer := range ac.Stack {
 		if _, err := fmt.Fprintf(w, "\n\033[31m%2v %v\033[0m", i+1, layer); err != nil {
-			return w
+			return ""
 		}
 	}
 
-	return w
+	return w.String()
 }
