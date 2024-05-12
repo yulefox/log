@@ -2,6 +2,7 @@ package log
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -15,6 +16,20 @@ func TestInit(t *testing.T) {
 	logger = Init(SetCaller(true))
 	if !logger.Options.AddCaller {
 		t.Errorf("Expected AddCaller to be true, got %v", logger.Options.AddCaller)
+	}
+
+	logger = Init(func(options *Options) error {
+		options.Cores = append(options.Cores, nil)
+		return nil
+	})
+	if logger.Options.Cores == nil || len(logger.Options.Cores) == 0 || logger.Options.Cores[len(logger.Options.Cores)-1] != nil {
+		t.Errorf("Expected Cores to contain a nil core, got %v", logger.Options.Cores)
+	}
+	var buf bytes.Buffer
+	Init(SetLevel(INFO), AddJsonLogger(&buf))
+	Info("test", "info message")
+	if !strings.Contains(buf.String(), "info message") {
+		t.Errorf("Expected 'info message' to be in log output")
 	}
 }
 
@@ -43,16 +58,16 @@ func TestDo(t *testing.T) {
 
 func TestLogFunctions(t *testing.T) {
 	var buf bytes.Buffer
-	Init(SetLevel(INFO), AddJsonLogger(&buf))
+	Init(SetLevel(INFO), AddFileLogger("test", &buf))
 
 	Debug("test", "debug message")
 	if buf.Len() != 0 {
 		t.Errorf("Expected no log output for DEBUG level")
 	}
 
-	Info("test", "info message")
-	if !strings.Contains(buf.String(), "info message") {
-		t.Errorf("Expected 'info message' to be in log output")
+	Info("test", "info message: %s", "hello, world")
+	if !strings.Contains(buf.String(), "info message: hello, world") {
+		t.Errorf("Expected 'info message: hello, world' to be in log output, get %s", buf.String())
 	}
 
 	buf.Reset()
@@ -72,11 +87,26 @@ func TestLogFunctions(t *testing.T) {
 			t.Errorf("Expected 'panic message' to be in log output")
 		}
 		if err := recover(); err != nil {
-			//Fatal("test", "fatal message")
+			buf.Reset()
+			Warn("test", "warn message")
+			if !strings.Contains(buf.String(), "warn message") {
+				t.Errorf("Expected 'warn message' to be in log output")
+			}
 		}
 	}()
 	buf.Reset()
 	Panic("panic", "panic message")
+}
+
+func TestAddFileLogger(t *testing.T) {
+	Init(SetLevel(INFO), AddFileLogger("test"))
+	Info("test", "info message")
+
+	filename := "logs/test.log"
+	_, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		t.Errorf("Expected '%s' to exist", filename)
+	}
 }
 
 func BenchmarkError(b *testing.B) {

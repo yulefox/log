@@ -49,9 +49,9 @@ func SetTimeFormat(format string, nowFunc func() time.Time) Option {
 }
 
 // AddFileLogger Add file logger
-func AddFileLogger(name string) Option {
+func AddFileLogger(name string, writers ...io.Writer) Option {
 	return func(o *Options) error {
-		o.Cores = append(o.Cores, NewFileCore(name))
+		o.Cores = append(o.Cores, NewFileCore(name, writers...))
 		return nil
 	}
 }

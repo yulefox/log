@@ -2,6 +2,7 @@ package log
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
@@ -11,33 +12,41 @@ import (
 type FileEncoder struct {
 }
 
-func NewFileCore(name string) *Core {
+func NewFileCore(name string, writers ...io.Writer) *Core {
 	if name == "" {
 		name = "app"
 	}
 	_ = os.MkdirAll("./logs", 0755)
 	allFileName := fmt.Sprintf("logs/%s.log", name)
 	errFileName := fmt.Sprintf("logs/%s_err.log", name)
-	allFile := &lumberjack.Logger{
-		Filename:   allFileName, // 日志文件路径
-		MaxSize:    1,           // 日志文件最大大小(MB)
-		MaxBackups: 100,         // 保留旧文件的最大个数
-		MaxAge:     28,          // 保留旧文件的最大天数
-		Compress:   false,       // 是否压缩/归档旧文件
+	core := &Core{
+		encoder: new(FileEncoder),
 	}
-	errFile := &lumberjack.Logger{
-		Filename:   errFileName, // 日志文件路径
-		MaxSize:    1,           // 日志文件最大大小(MB)
-		MaxBackups: 10,          // 保留旧文件的最大个数
-		MaxAge:     28,          // 保留旧文件的最大天数
-		Compress:   false,       // 是否压缩/归档旧文件
+	if len(writers) > 0 {
+		core.infoWriter = writers[0]
+		if len(writers) > 1 {
+			core.errWriter = writers[1]
+		} else {
+			core.errWriter = writers[0]
+		}
+	} else {
+		core.allWriter = &lumberjack.Logger{
+			Filename:   allFileName, // 日志文件路径
+			MaxSize:    1,           // 日志文件最大大小(MB)
+			MaxBackups: 100,         // 保留旧文件的最大个数
+			MaxAge:     28,          // 保留旧文件的最大天数
+			Compress:   false,       // 是否压缩/归档旧文件
+		}
+		core.errWriter = &lumberjack.Logger{
+			Filename:   errFileName, // 日志文件路径
+			MaxSize:    1,           // 日志文件最大大小(MB)
+			MaxBackups: 10,          // 保留旧文件的最大个数
+			MaxAge:     28,          // 保留旧文件的最大天数
+			Compress:   false,       // 是否压缩/归档旧文件
+		}
 	}
 
-	return &Core{
-		allWriter: allFile,
-		errWriter: errFile,
-		encoder:   new(FileEncoder),
-	}
+	return core
 }
 
 func (e *FileEncoder) Encode(ac *Action, params []any) string {
