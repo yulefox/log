@@ -2,8 +2,8 @@
 
 [//]: # (<img align="right" width="159px" src="https://raw.githubusercontent.com/gin-gonic/logo/master/color.png">)
 
-[![Build Status](https://github.com/yulefox/log/workflows/GoBuild/badge.svg?branch=main)](https://github.com/yulefox/log/actions?query=branch%3Amain)
-[![codecov](https://codecov.io/gh/yulefox/log/branch/master/graph/badge.svg)](https://codecov.io/gh/yulefox/log)
+[![Build Status](https://github.com/yulefox/log/workflows/GoBuild/badge.svg)](https://github.com/yulefox/log/actions?query=branch%3Amain)
+[![codecov](https://codecov.io/gh/yulefox/log/branch/main/graph/badge.svg)](https://codecov.io/gh/yulefox/log)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yulefox/log)](https://goreportcard.com/report/github.com/yulefox/log)
 [![Sourcegraph](https://sourcegraph.com/github.com/yulefox/log/-/badge.svg)](https://sourcegraph.com/github.com/yulefox/log?badge)
 [![Open Source Helpers](https://www.codetriage.com/yulefox/log/badges/users.svg)](https://www.codetriage.com/yulefox/log)
