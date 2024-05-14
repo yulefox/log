@@ -1,5 +1,7 @@
 package log
 
+import "os"
+
 type Action struct {
 	*Options
 	Tag        string
@@ -20,5 +22,12 @@ func (a *Action) Write(params ...any) {
 
 	if a.AfterWrite != nil {
 		a.AfterWrite()
+	}
+	switch a.Level {
+	case FATL:
+		os.Exit(1)
+	case PNIC:
+		panic(params)
+	default:
 	}
 }

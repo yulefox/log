@@ -130,18 +130,8 @@ func (o Options) do(level Level, tag string, params ...any) {
 				}
 			}
 			switch ac.Level {
-			case ERRO:
+			case ERRO, FATL, PNIC:
 				addFrames()
-			case FATL:
-				addFrames()
-				ac.AfterWrite = func() {
-					os.Exit(1)
-				}
-			case PNIC:
-				addFrames()
-				ac.AfterWrite = func() {
-					panic(params)
-				}
 			default:
 			}
 		}
@@ -179,10 +169,12 @@ func Panic(tag string, params ...any) {
 	if l := getLogger(); l != nil {
 		l.Options.do(PNIC, tag, params...)
 	}
+	panic(params)
 }
 
 func Fatal(tag string, params ...any) {
 	if l := getLogger(); l != nil {
 		l.Options.do(FATL, tag, params...)
 	}
+	os.Exit(1)
 }

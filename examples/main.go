@@ -35,12 +35,12 @@ func main() {
 		}()
 	}
 	wg.Wait()
-	defer func() {
-		if err := recover(); err != nil {
-			log.Warn("recover", "Recovered from panic: ", err)
-		}
-	}()
-	//log.Panic("panic", "This is a panic with caller stack.")
+	//defer func() {
+	//	if err := recover(); err != nil {
+	//		log.Warn("recover", "Recovered from panic: ", err)
+	//	}
+	//}()
+	log.Panic("panic", "This is a panic with caller stack.")
 	log.Fatal("fatal", "This should not be logged.")
 	log.Info("info", "This should not be logged.")
 }

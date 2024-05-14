@@ -40,6 +40,40 @@ func main() {
 }
 ```
 
+[//]: # (## Features)
+
+[//]: # ()
+[//]: # ()
+[//]: # (UUIDs are 16 bytes &#40;128 bits&#41; and 36 chars as string representation. Twitter Snowflake)
+
+[//]: # (ids are 8 bytes &#40;64 bits&#41; but require machine/data-center configuration and/or central)
+
+[//]: # (generator servers. xid stands in between with 12 bytes &#40;96 bits&#41; and a more compact)
+
+[//]: # (URL-safe string representation &#40;20 chars&#41;. No configuration or central generator server)
+
+[//]: # (is required. So it can be used directly in server's code.)
+
+[//]: # ()
+[//]: # (| Name     | Binary Size | String Size    | Features                         |)
+
+[//]: # (|----------|-------------|----------------|----------------------------------|)
+
+[//]: # (| [go log] | 16 bytes    | 36 chars       | configuration free, not sortable |)
+
+[//]: # (| [LogRus] | 16 bytes    | 22 chars       | configuration free, not sortable |)
+
+[//]: # (| log      | 12 bytes    | 20 chars       | configuration free               |)
+
+[//]: # ()
+[//]: # ([UUID]: https://en.wikipedia.org/wiki/Universally_unique_identifier)
+
+[//]: # ([shortuuid]: https://github.com/stochastic-technologies/shortuuid)
+
+[//]: # ([Snowflake]: https://blog.twitter.com/2010/announcing-snowflake)
+
+[//]: # ([MongoID]: https://docs.mongodb.org/manual/reference/object-id/)
+
 ## License
 
 MIT

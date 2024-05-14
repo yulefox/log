@@ -1,6 +1,9 @@
 package log
 
-import "strings"
+import (
+	"runtime/debug"
+	"strings"
+)
 
 func TrimPath(file string) string {
 	idx := strings.LastIndexByte(file, '/')
@@ -14,4 +17,13 @@ func TrimPath(file string) string {
 	}
 
 	return file[idx+1:]
+}
+
+func GetStacks(skip int) []string {
+	stacks := strings.Split(string(debug.Stack()), "\n")
+	if len(stacks) > skip {
+		stacks = stacks[skip:]
+	}
+
+	return stacks
 }
