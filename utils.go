@@ -38,12 +38,3 @@ func GetStack(skip int, depth int) (stack []string) {
 
 	return
 }
-
-func GetStacks(skip int) []string {
-	stacks := strings.Split(string(debug.Stack()), "\n")
-	if len(stacks) > skip {
-		stacks = stacks[skip:]
-	}
-
-	return stacks
-}
