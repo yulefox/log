@@ -1,22 +1,21 @@
 package log
 
 import (
-	"fmt"
 	"io"
 	"os"
-	"runtime"
+	"sync"
 	"sync/atomic"
 	"time"
 )
 
 const (
-	Version = "0.1.0"
 	AppName = "APP_NAME"
 	AppMode = "APP_MODE"
 )
 
 var (
-	_logger atomic.Pointer[Logger]
+	_logger    atomic.Pointer[Logger]
+	_entryPool sync.Pool
 )
 
 type Logger struct {
@@ -89,92 +88,67 @@ func getLogger(options ...Option) *Logger {
 	return Init(options...)
 }
 
-func (o Options) do(level Level, tag string, params ...any) {
-	if level < o.Level {
-		return
+func getEntry(options ...Option) *Entry {
+	logger := getLogger(options...)
+	if logger == nil {
+		return nil
 	}
-
-	ac := &Action{
-		Level:   level,
-		Options: &o,
+	entry, ok := _entryPool.Get().(*Entry)
+	if ok {
+		return entry
 	}
-
-	if o.TimeFormat != "" {
-		ac.Date = o.Now().Format(o.TimeFormat)
-	}
-
-	if o.AddCaller || ac.Level >= ERRO {
-		var pc [10]uintptr
-		n := runtime.Callers(o.Skip, pc[:])
-		if n > 0 {
-			callers := pc[:n]
-			frames := runtime.CallersFrames(callers)
-			frame, more := frames.Next()
-			caller := func() string {
-				return fmt.Sprintf("%v:%v %v",
-					TrimPath(frame.File),
-					frame.Line,
-					frame.Function,
-				)
-			}
-			if o.AddCaller {
-				ac.Caller = fmt.Sprintf("%v:%v",
-					TrimPath(frame.File),
-					frame.Line)
-			}
-
-			addFrames := func() {
-				for more {
-					ac.Stack = append(ac.Stack, caller())
-					frame, more = frames.Next()
-				}
-			}
-			switch ac.Level {
-			case ERRO, FATL, PNIC:
-				addFrames()
-			default:
-			}
-		}
-	}
-
-	ac.Tag = tag
-	ac.Write(params...)
-}
-
-func Debug(tag string, params ...any) {
-	if l := getLogger(); l != nil {
-		l.Options.do(DEBU, tag, params...)
+	return &Entry{
+		Options: &logger.Options,
 	}
 }
 
-func Info(tag string, params ...any) {
-	if l := getLogger(); l != nil {
-		l.Options.do(INFO, tag, params...)
+func putEntry(e *Entry) {
+	e.Fields = []string{}
+	e.Stack = []string{}
+	e.AfterWrite = nil
+	_entryPool.Put(e)
+}
+
+func Debug(params ...any) {
+	if e := getEntry(); e != nil {
+		defer putEntry(e)
+		e.log(DEBU, params...)
 	}
 }
 
-func Warn(tag string, params ...any) {
-	if l := getLogger(); l != nil {
-		l.Options.do(WARN, tag, params...)
+func Info(params ...any) {
+	if e := getEntry(); e != nil {
+		defer putEntry(e)
+		e.log(INFO, params...)
 	}
 }
 
-func Error(tag string, params ...any) {
-	if l := getLogger(); l != nil {
-		l.Options.do(ERRO, tag, params...)
+func Warn(params ...any) {
+	if e := getEntry(); e != nil {
+		defer putEntry(e)
+		e.log(WARN, params...)
 	}
 }
 
-func Panic(tag string, params ...any) {
-	if l := getLogger(); l != nil {
-		l.Options.do(PNIC, tag, params...)
+func Error(params ...any) {
+	if e := getEntry(); e != nil {
+		defer putEntry(e)
+		e.log(ERRO, params...)
+	}
+}
+
+func Panic(params ...any) {
+	if e := getEntry(); e != nil {
+		defer putEntry(e)
+		e.log(PNIC, params...)
 	}
 	panic(params)
 }
 
-func Fatal(tag string, params ...any) {
-	if l := getLogger(); l != nil {
-		l.Options.do(FATL, tag, params...)
+func Fatal(params ...any) {
+	if e := getEntry(); e != nil {
+		defer putEntry(e)
+		e.log(FATL, params...)
 	}
 	os.Exit(1)
 }

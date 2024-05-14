@@ -16,7 +16,7 @@ func NewTermCore() *Core {
 	}
 }
 
-func (e *TermEncoder) Encode(ac *Action, params []any) string {
+func (e *TermEncoder) Encode(ac *Entry, params []any) string {
 	if ac == nil {
 		return ""
 	}
@@ -36,8 +36,8 @@ func (e *TermEncoder) Encode(ac *Action, params []any) string {
 	if ac.AddCaller && ac.Caller != "" {
 		w.WriteString(" " + ac.Caller)
 	}
-	if ac.Tag != "" {
-		w.WriteString(" [" + ac.Tag + "]")
+	if len(ac.Fields) > 0 {
+		w.WriteString(" [" + strings.Join(ac.Fields, " ") + "]")
 	}
 
 	if params != nil {

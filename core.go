@@ -6,7 +6,7 @@ import (
 )
 
 type Encoder interface {
-	Encode(ac *Action, params []any) string
+	Encode(ac *Entry, params []any) string
 }
 
 type Core struct {
@@ -16,7 +16,7 @@ type Core struct {
 	encoder    Encoder
 }
 
-func (c *Core) Write(ac *Action, params ...any) {
+func (c *Core) Write(ac *Entry, params ...any) {
 	e := c.encoder
 	if e == nil || ac == nil {
 		return

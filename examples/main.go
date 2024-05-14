@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/yulefox/log"
 	"sync"
 	"time"
@@ -23,24 +22,23 @@ func main() {
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
-			tag := fmt.Sprintf("foo-%d", i)
 			//tag = ""
-			for j := 0; j < 300; j++ {
-				log.Debug(tag, "This is a debug log entry ", i, i+1)
-				log.Info(tag, "This is an info log entry ", i)
-				log.Warn(tag, "This is a warning log entry")
-				log.Error(tag, "This is an error log entry with caller stack")
+			for j := 0; j < 3; j++ {
+				log.Debug("This is a debug log entry ", i, i+1)
+				log.Info("This is an info log entry ", i)
+				log.Warn("This is a warning log entry")
+				log.Error("This is an error log entry with caller stack")
 			}
 			wg.Done()
 		}()
 	}
 	wg.Wait()
-	//defer func() {
-	//	if err := recover(); err != nil {
-	//		log.Warn("recover", "Recovered from panic: ", err)
-	//	}
-	//}()
-	log.Panic("panic", "This is a panic with caller stack.")
-	log.Fatal("fatal", "This should not be logged.")
-	log.Info("info", "This should not be logged.")
+	defer func() {
+		if err := recover(); err != nil {
+			log.Warn("recover", "Recovered from panic: ", err)
+		}
+	}()
+	log.Panic("This is a panic with caller stack.")
+	log.Fatal("This should not be logged.")
+	log.Info("This should not be logged.")
 }

@@ -27,32 +27,16 @@ func TestInit(t *testing.T) {
 	}
 	var buf bytes.Buffer
 	Init(SetLevel(INFO), AddJsonLogger(&buf))
-	Info("test", "info message")
+	Info("info message")
 	if !strings.Contains(buf.String(), "info message") {
 		t.Errorf("Expected 'info message' to be in log output")
 	}
 }
 
 func TestGetLogger(t *testing.T) {
-	logger := getLogger()
+	logger := getEntry()
 	if logger == nil {
 		t.Error("Expected logger to be not nil")
-	}
-}
-
-func TestDo(t *testing.T) {
-	var buf bytes.Buffer
-	logger := Init(SetLevel(INFO), AddJsonLogger(&buf))
-
-	logger.Options.do(INFO, "test", "message")
-	if !strings.Contains(buf.String(), "message") {
-		t.Errorf("Expected 'message' to be in log output")
-	}
-
-	buf.Reset()
-	logger.Options.do(DEBU, "test", "message")
-	if buf.Len() != 0 {
-		t.Errorf("Expected no log output for DEBUG level")
 	}
 }
 
@@ -60,24 +44,24 @@ func TestLogFunctions(t *testing.T) {
 	var buf bytes.Buffer
 	Init(SetLevel(INFO), AddFileLogger("test", &buf))
 
-	Debug("test", "debug message")
+	Debug("debug message")
 	if buf.Len() != 0 {
 		t.Errorf("Expected no log output for DEBUG level")
 	}
 
-	Info("test", "info message: %s", "hello, world")
+	Info("info message: %s", "hello, world")
 	if !strings.Contains(buf.String(), "info message: hello, world") {
 		t.Errorf("Expected 'info message: hello, world' to be in log output, get %s", buf.String())
 	}
 
 	buf.Reset()
-	Warn("test", "warn message")
+	Warn("warn message")
 	if !strings.Contains(buf.String(), "warn message") {
 		t.Errorf("Expected 'warn message' to be in log output")
 	}
 
 	buf.Reset()
-	Error("test", "error message")
+	Error("error message")
 	if !strings.Contains(buf.String(), "error message") {
 		t.Errorf("Expected 'error message' to be in log output")
 	}
@@ -88,7 +72,7 @@ func TestLogFunctions(t *testing.T) {
 		}
 		if err := recover(); err != nil {
 			buf.Reset()
-			Warn("test", "warn message")
+			Warn("warn message")
 			if !strings.Contains(buf.String(), "warn message") {
 				t.Errorf("Expected 'warn message' to be in log output")
 			}
@@ -100,7 +84,7 @@ func TestLogFunctions(t *testing.T) {
 
 func TestAddFileLogger(t *testing.T) {
 	Init(SetLevel(INFO), AddFileLogger("test"))
-	Info("test", "info message")
+	Info("info message")
 
 	filename := "logs/test.log"
 	_, err := os.Stat(filename)

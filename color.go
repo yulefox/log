@@ -1,7 +1,5 @@
 package log
 
-import "fmt"
-
 const (
 	FMT_RESET = 0
 
@@ -50,62 +48,68 @@ const (
 )
 
 type Shader struct {
-	args []int
+	color string
 }
 
 func (s *Shader) do(content string) string {
 	cache := bufferPool.Get().(*Buffer)
 	defer cache.close()
 
-	fmt.Fprint(cache, "\033[")
-	fmt.Fprintf(cache, "%d", s.args[0])
-	for i := 1; i < len(s.args); i++ {
-		fmt.Fprintf(cache, ";%d", s.args[i])
-	}
-	fmt.Fprint(cache, "m", content, "\033[0m")
+	cache.WriteString(s.color + content + "\033[0m")
+
+	//fmt.Fprint(cache, "\033[0;")
+	//fmt.Fprintf(cache, "%d", s.color[0])
+	//for i := 1; i < len(s.color); i++ {
+	//	fmt.Fprintf(cache, ";%d", s.color[i])
+	//}
+	//fmt.Fprint(cache, "m", content, "\033[0m")
 
 	return cache.String()
 }
 
 var (
 	infoShader = Shader{
-		args: []int{
-			FGC_LIGHTWHITE,
-			BGC_GREEN,
-		},
+		color: "\033[0;0;97;42m",
+		//color: []int{
+		//	FGC_LIGHTWHITE,
+		//	BGC_GREEN,
+		//},
 	}
 
-	debuShader = Shader{
-		args: []int{
-			FGC_LIGHTWHITE,
-			BGC_LIGHTGREY,
-		},
+	debugShader = Shader{
+		color: "\033[0;0;97;44m",
+		//color: []int{
+		//	FGC_LIGHTWHITE,
+		//	BGC_LIGHTGREY,
+		//},
 	}
 
 	warnShader = Shader{
-		args: []int{
-			FGC_LIGHTWHITE,
-			BGC_YELLOW,
-		},
+		color: "\033[0;0;97;43m",
+		//color: []int{
+		//	FGC_LIGHTWHITE,
+		//	BGC_YELLOW,
+		//},
 	}
 
-	erroShader = Shader{
-		args: []int{
-			FGC_LIGHTWHITE,
-			BGC_RED,
-		},
+	errorShader = Shader{
+		color: "\033[0;0;97;41m",
+		//color: []int{
+		//	FGC_LIGHTWHITE,
+		//	BGC_RED,
+		//},
 	}
 )
 
 func shaderByLv(level Level) *Shader {
 	switch level {
 	case DEBU:
-		return &debuShader
+		return &debugShader
 	case INFO:
 		return &infoShader
 	case WARN:
 		return &warnShader
 	default:
-		return &erroShader
+		return &errorShader
 	}
 }

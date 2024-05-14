@@ -1,7 +1,8 @@
 package log
 
 import (
-	"runtime/debug"
+	"fmt"
+	"runtime"
 	"strings"
 )
 
@@ -11,12 +12,31 @@ func TrimPath(file string) string {
 		return file
 	}
 
-	idx = strings.LastIndexByte(file[:idx], '/')
-	if idx == -1 {
-		return file
+	return file[idx+1:]
+}
+
+func GetStack(skip int, depth int) (stack []string) {
+	pc := make([]uintptr, depth)
+	n := runtime.Callers(skip, pc)
+	if n == 0 {
+		return
 	}
 
-	return file[idx+1:]
+	frames := runtime.CallersFrames(pc[:n])
+	for {
+		frame, more := frames.Next()
+		caller := fmt.Sprintf("%v %v:%v",
+			TrimPath(frame.Function),
+			frame.File,
+			frame.Line,
+		)
+		stack = append(stack, caller)
+		if !more {
+			break
+		}
+	}
+
+	return
 }
 
 func GetStacks(skip int) []string {
