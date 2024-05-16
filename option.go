@@ -5,8 +5,8 @@ import "time"
 const (
 	DefaultName       = ""
 	DefaultLevel      = DEBU
-	DefaultSkip       = 3
-	DefaultAddCaller  = true
+	DefaultSkip       = 4
+	DefaultAddCaller  = false
 	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 

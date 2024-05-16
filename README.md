@@ -30,13 +30,13 @@ package main
 import "github.com/yulefox/log"
 
 func main() {
-	log.Info("tag", "Here is a simple example.")
-	log.Debug("main", "This is a debug message.")
-	log.Info("", "Hello, %s!", "world")
-	log.Error("", "This is an error with caller stack.")
-	log.Panic("panic", "This is a panic with caller stack.")
-	//log.Fatal("fatal", "This should not be logged.")
-	//log.Info("info", "This should not be logged.")
+	log.Info("Here is a simple example.")
+	log.Debug("This is a debug message.")
+	log.Info("Hello, %s!", "world")
+	log.Error("This is an error with caller stack.")
+	log.Panic("This is a panic with caller stack.")
+	//log.Fatal("This should not be logged.")
+	//log.Info("This should not be logged.")
 }
 ```
 

@@ -95,6 +95,7 @@ func getEntry(options ...Option) *Entry {
 	}
 	entry, ok := _entryPool.Get().(*Entry)
 	if ok {
+		entry.Options = &logger.Options
 		return entry
 	}
 	return &Entry{

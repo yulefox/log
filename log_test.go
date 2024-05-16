@@ -26,7 +26,7 @@ func TestInit(t *testing.T) {
 		t.Errorf("Expected Cores to contain a nil core, got %v", logger.Options.Cores)
 	}
 	var buf bytes.Buffer
-	Init(SetLevel(INFO), AddJsonLogger(&buf))
+	Init(SetLevel(INFO), AddJsonLogger(&buf), SetCaller(true))
 	Info("info message")
 	if !strings.Contains(buf.String(), "info message") {
 		t.Errorf("Expected 'info message' to be in log output")
