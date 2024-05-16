@@ -8,6 +8,7 @@ import (
 type Entry struct {
 	*Options
 	Level      Level
+	Params     []any
 	Date       string
 	Caller     string
 	Fields     []string
@@ -15,35 +16,12 @@ type Entry struct {
 	AfterWrite func()
 }
 
-func (e *Entry) log(level Level, params ...any) {
-	if level < e.Options.Level {
-		return
-	}
-	e.Level = level
-
-	if e.TimeFormat != "" {
-		e.Date = e.Now().Format(e.TimeFormat)
-	}
-
-	if e.AddCaller || e.Level >= ERRO {
-		stack := getStack(e.Skip, 10)
-		if len(stack) > 0 {
-			if e.AddCaller {
-				e.Caller = e.FormatFrame(stack[0])
-			}
-			switch e.Level {
-			case ERRO, FATL, PNIC:
-				e.Stack = stack
-			default:
-			}
-		}
-	}
-
+func (e *Entry) log() {
 	for _, core := range e.Cores {
 		if core == nil {
 			continue
 		}
-		core.Write(e, params...)
+		core.Write(e, e.Params...)
 	}
 
 	if e.AfterWrite != nil {
@@ -53,7 +31,7 @@ func (e *Entry) log(level Level, params ...any) {
 	case FATL:
 		os.Exit(1)
 	case PNIC:
-		panic(params)
+		panic(e.Params)
 	default:
 	}
 }

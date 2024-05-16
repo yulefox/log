@@ -5,8 +5,9 @@
 [![Build Status](https://github.com/yulefox/log/workflows/GoTest/badge.svg)](https://github.com/yulefox/log/actions?query=branch%3Amain)
 [![codecov](https://codecov.io/gh/yulefox/log/branch/main/graph/badge.svg)](https://codecov.io/gh/yulefox/log)
 [![Go Report Card](https://goreportcard.com/badge/github.com/yulefox/log)](https://goreportcard.com/report/github.com/yulefox/log)
-[![Sourcegraph](https://sourcegraph.com/github.com/yulefox/log/-/badge.svg)](https://sourcegraph.com/github.com/yulefox/log?badge)
-[![Open Source Helpers](https://www.codetriage.com/yulefox/log/badges/users.svg)](https://www.codetriage.com/yulefox/log)
+
+[//]: # ([![Sourcegraph]&#40;https://sourcegraph.com/github.com/yulefox/log/-/badge.svg&#41;]&#40;https://sourcegraph.com/github.com/yulefox/log?badge&#41;)
+[//]: # ([![Open Source Helpers]&#40;https://www.codetriage.com/yulefox/log/badges/users.svg&#41;]&#40;https://www.codetriage.com/yulefox/log&#41;)
 
 [![GoDoc](https://pkg.go.dev/badge/github.com/yulefox/log?status.svg)](https://pkg.go.dev/github.com/yulefox/log?tab=doc)
 [![Release](https://img.shields.io/github/release/yulefox/log.svg?style=flat-square)](https://github.com/yulefox/log/releases)

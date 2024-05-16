@@ -13,6 +13,6 @@ func TestGetStack(t *testing.T) {
 	// Check if the first element of the slice contains the expected string
 	expected := "TestGetStack"
 	if !strings.Contains(stack[0], expected) {
-		t.Errorf("Expected the first element of the slice to contain %s, got %s", expected, stack)
+		t.Errorf("Expected the first element of the slice to contain %s, got %v", expected, stack)
 	}
 }

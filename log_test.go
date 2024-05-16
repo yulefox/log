@@ -99,13 +99,17 @@ func TestNamedLoggerFunctions(t *testing.T) {
 }
 
 func TestNamedFileLoggerFunctions(t *testing.T) {
-	logger := Init(SetName("hello"), SetTimeFormat("2006-01-02 15:04:05.000000000", time.Now().UTC), SetLevel(INFO), AddFileLogger("rpc"))
+	logger := Init(SetName("hello"), SetTimeFormat("2006-01-02 15:04:05.000000000", time.Now().UTC),
+		SetCaller(true),
+		SetLevel(INFO), AddFileLogger("test"),
+		AddFileLogger("rpc"))
 
 	logger.Debug("debug message")
 	logger.Info("info message: %s", "hello, world")
 	logger.Warn("warn message")
 	logger.Error("error message")
 
+	time.Sleep(5 * time.Second)
 	defer func() {
 		if err := recover(); err != nil {
 			logger.Warn("warn message")

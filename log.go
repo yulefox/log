@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"io"
 	"os"
 	"runtime"
@@ -21,6 +22,9 @@ var (
 )
 
 type Logger struct {
+	context.Context
+	cancel  context.CancelFunc
+	logs    chan *Entry
 	options Options
 }
 
@@ -86,14 +90,32 @@ func Init(options ...Option) *Logger {
 		}
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	logger := &Logger{
+		Context: ctx,
+		cancel:  cancel,
 		options: opts,
+		logs:    make(chan *Entry, 1024),
 	}
 	if opts.Name != "" {
 		_namedLoggers.Store(opts.Name, logger)
 	} else {
 		_logger.Store(logger)
 	}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case e, ok := <-logger.logs:
+				e.log()
+				putEntry(e)
+				if !ok {
+					return
+				}
+			}
+		}
+	}()
 	return logger
 }
 
@@ -133,55 +155,88 @@ func putEntry(e *Entry) {
 }
 
 func (l *Logger) Debug(params ...any) {
+	if l.options.Level > DEBU {
+		return
+	}
 	if e := getEntry(&l.options); e != nil {
-		defer putEntry(e)
-		e.log(DEBU, params...)
+		l.log(e, DEBU, params...)
 	}
 }
 
 func (l *Logger) Info(params ...any) {
+	if l.options.Level > INFO {
+		return
+	}
 	if e := getEntry(&l.options); e != nil {
-		defer putEntry(e)
-		e.log(INFO, params...)
+		l.log(e, INFO, params...)
 	}
 }
 
 func (l *Logger) Warn(params ...any) {
+	if l.options.Level > WARN {
+		return
+	}
 	if e := getEntry(&l.options); e != nil {
-		defer putEntry(e)
-		e.log(WARN, params...)
+		l.log(e, WARN, params...)
 	}
 }
 
 func (l *Logger) Error(params ...any) {
 	if e := getEntry(&l.options); e != nil {
-		defer putEntry(e)
-		e.log(ERRO, params...)
+		l.log(e, ERRO, params...)
 	}
 }
 
 func (l *Logger) Panic(params ...any) {
 	if e := getEntry(&l.options); e != nil {
-		defer putEntry(e)
-		e.log(PNIC, params...)
+		l.log(e, PNIC, params...)
 	}
 	panic(params)
 }
 
 func (l *Logger) Fatal(params ...any) {
 	if e := getEntry(&l.options); e != nil {
-		defer putEntry(e)
-		e.log(FATL, params...)
+		l.log(e, FATL, params...)
 	}
 	os.Exit(1)
+}
+
+func (l *Logger) log(e *Entry, level Level, params ...any) {
+	e.Level = level
+	e.Params = params
+
+	if e.TimeFormat != "" {
+		e.Date = e.Now().Format(e.TimeFormat)
+	}
+
+	if e.AddCaller || e.Level >= ERRO {
+		stack := getStack(e.Skip, 10)
+		if len(stack) > 0 {
+			if e.AddCaller {
+				e.Caller = e.FormatFrame(stack[0])
+			}
+			switch e.Level {
+			case ERRO, FATL, PNIC:
+				e.Stack = stack
+			default:
+			}
+		}
+	}
+	select {
+	case l.logs <- e:
+	case <-time.After(1 * time.Second):
+		return
+	}
 }
 
 func Debug(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
+		if l.options.Level > DEBU {
+			return
+		}
 		if e := getEntry(&l.options); e != nil {
-			defer putEntry(e)
-			e.log(DEBU, params...)
+			l.log(e, DEBU, params...)
 		}
 	}
 }
@@ -189,9 +244,11 @@ func Debug(params ...any) {
 func Info(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
+		if l.options.Level > INFO {
+			return
+		}
 		if e := getEntry(&l.options); e != nil {
-			defer putEntry(e)
-			e.log(INFO, params...)
+			l.log(e, INFO, params...)
 		}
 	}
 }
@@ -199,9 +256,11 @@ func Info(params ...any) {
 func Warn(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
+		if l.options.Level > WARN {
+			return
+		}
 		if e := getEntry(&l.options); e != nil {
-			defer putEntry(e)
-			e.log(WARN, params...)
+			l.log(e, WARN, params...)
 		}
 	}
 }
@@ -210,8 +269,7 @@ func Error(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
 		if e := getEntry(&l.options); e != nil {
-			defer putEntry(e)
-			e.log(ERRO, params...)
+			l.log(e, ERRO, params...)
 		}
 	}
 }
@@ -220,8 +278,7 @@ func Panic(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
 		if e := getEntry(&l.options); e != nil {
-			defer putEntry(e)
-			e.log(PNIC, params...)
+			l.log(e, PNIC, params...)
 		}
 	}
 	panic(params)
@@ -231,8 +288,7 @@ func Fatal(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
 		if e := getEntry(&l.options); e != nil {
-			defer putEntry(e)
-			e.log(FATL, params...)
+			l.log(e, FATL, params...)
 		}
 	}
 	os.Exit(1)
