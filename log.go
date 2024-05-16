@@ -93,18 +93,31 @@ func getEntry(options ...Option) *Entry {
 	if logger == nil {
 		return nil
 	}
-	entry, ok := _entryPool.Get().(*Entry)
-	if ok {
-		return entry
+	entry, _ := _entryPool.Get().(*Entry)
+	if entry == nil {
+		entry = &Entry{
+			Options: &logger.Options,
+			channel: make(chan *logEntry, 1024),
+		}
 	}
-	return &Entry{
-		Options: &logger.Options,
-	}
+	go func() {
+		select {
+		case data, closed := <-entry.channel:
+			if !closed {
+				putEntry(entry)
+				return
+			}
+			entry._log(data)
+			return
+		}
+	}()
+	return entry
 }
 
 func putEntry(e *Entry) {
 	e.Fields = []string{}
 	e.Stack = []string{}
+	e.channel = make(chan *logEntry, 1024)
 	e.AfterWrite = nil
 	_entryPool.Put(e)
 }

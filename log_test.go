@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestInit(t *testing.T) {
@@ -28,6 +29,7 @@ func TestInit(t *testing.T) {
 	var buf bytes.Buffer
 	Init(SetLevel(INFO), AddJsonLogger(&buf))
 	Info("info message")
+	time.Sleep(time.Second * 5)
 	if !strings.Contains(buf.String(), "info message") {
 		t.Errorf("Expected 'info message' to be in log output")
 	}
@@ -83,20 +85,29 @@ func TestLogFunctions(t *testing.T) {
 }
 
 func TestAddFileLogger(t *testing.T) {
-	Init(SetLevel(INFO), AddFileLogger("test"))
-	Info("info message")
+	Init(
+		func(options *Options) error {
+			options.Skip = 4
+			return nil
+		},
+		SetLevel(DEBU),
+		SetCaller(true),
+		AddFileLogger("test"),
+	)
+	Info("%s", "info message")
 
 	filename := "logs/test.log"
 	_, err := os.Stat(filename)
 	if os.IsNotExist(err) {
 		t.Errorf("Expected '%s' to exist", filename)
 	}
+	time.Sleep(time.Second * 10)
 }
 
 func BenchmarkError(b *testing.B) {
 	// run the Debug function b.N times
 	for i := 0; i < b.N; i++ {
-		Info("", "%s %s", "param1", "param2")
-		Error("", "%s %s", "param1", "param2")
+		Info("%s %s", "param1", "param2")
+		Error("%s %s", "param1", "param2")
 	}
 }

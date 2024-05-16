@@ -61,9 +61,6 @@ func (e *FileEncoder) Encode(ac *Entry, params []any) string {
 		w.WriteString(ac.Date + " ")
 	}
 	w.WriteString(ac.Level.String())
-	if ac.AddCaller && ac.Caller != "" {
-		w.WriteString(" " + ac.Caller)
-	}
 	if len(ac.Fields) > 0 {
 		w.WriteString(" [" + strings.Join(ac.Fields, " ") + "]")
 	}
@@ -80,6 +77,9 @@ func (e *FileEncoder) Encode(ac *Entry, params []any) string {
 				return ""
 			}
 		}
+	}
+	if ac.AddCaller && ac.Caller != "" {
+		w.WriteString(" " + ac.Caller)
 	}
 
 	for i, layer := range ac.Stack {

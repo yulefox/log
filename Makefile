@@ -4,7 +4,7 @@ GOARCH ?= $(shell go env GOARCH)
 GOFMT ?= gofmt "-s"
 GO_VERSION=$(shell $(GO) version | cut -c 14- | cut -d' ' -f1 | cut -d'.' -f2)
 VERSION := $(shell git describe --tags --dirty="-dev")
-VERSION_PKG := github.com/yulefox/log/version
+VERSION_PKG := github.com/yulefox/log
 
 TEST_FOLDER := $(shell $(GO) list ./... | grep -v examples)
 TEST_TAGS ?= ""

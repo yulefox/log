@@ -33,9 +33,6 @@ func (e *TermEncoder) Encode(ac *Entry, params []any) string {
 	} else {
 		w.WriteString(ac.Level.String())
 	}
-	if ac.AddCaller && ac.Caller != "" {
-		w.WriteString(" " + ac.Caller)
-	}
 	if len(ac.Fields) > 0 {
 		w.WriteString(" [" + strings.Join(ac.Fields, " ") + "]")
 	}
@@ -54,6 +51,9 @@ func (e *TermEncoder) Encode(ac *Entry, params []any) string {
 		}
 	}
 
+	if ac.AddCaller && ac.Caller != "" {
+		w.WriteString(" " + ac.Caller)
+	}
 	for i, layer := range ac.Stack {
 		if _, err := fmt.Fprintf(w, "\n\033[31m%2v %v\033[0m", i+1, layer); err != nil {
 			return ""
