@@ -15,6 +15,9 @@ type Option func(*Options) error
 
 // Options can be used to create a customized logger.
 type Options struct {
+	// Name is the name of the logger.
+	Name string
+
 	// TimeFormat is the time format for log entries.
 	TimeFormat string
 

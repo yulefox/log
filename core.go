@@ -16,13 +16,13 @@ type Core struct {
 	encoder    Encoder
 }
 
-func (c *Core) Write(ac *Entry, params ...any) {
+func (c *Core) Write(entry *Entry, params ...any) {
 	e := c.encoder
-	if e == nil || ac == nil {
+	if e == nil || entry == nil {
 		return
 	}
 
-	str := e.Encode(ac, params) + "\n"
+	str := e.Encode(entry, params) + "\n"
 	buff := *(*[]byte)(unsafe.Pointer(
 		&struct {
 			string
@@ -32,7 +32,7 @@ func (c *Core) Write(ac *Entry, params ...any) {
 	if c.allWriter != nil {
 		c.allWriter.Write(buff)
 	}
-	switch ac.Level {
+	switch entry.Level {
 	case ERRO, PNIC, FATL:
 		if c.errWriter != nil {
 			c.errWriter.Write(buff)
