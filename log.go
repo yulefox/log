@@ -3,6 +3,7 @@ package log
 import (
 	"io"
 	"os"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -126,7 +127,7 @@ func getEntry(options *Options) *Entry {
 
 func putEntry(e *Entry) {
 	e.Fields = []string{}
-	e.Stack = []string{}
+	e.Stack = []runtime.Frame{}
 	e.AfterWrite = nil
 	_entryPool.Put(e)
 }

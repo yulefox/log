@@ -1,6 +1,10 @@
 package log
 
-import "time"
+import (
+	"fmt"
+	"runtime"
+	"time"
+)
 
 const (
 	DefaultName       = ""
@@ -34,16 +38,23 @@ type Options struct {
 	Cores []*Core
 
 	Now func() time.Time
+
+	FormatFrame func(runtime.Frame) string
+}
+
+func DefaultFormatFrame(frame runtime.Frame) string {
+	return fmt.Sprintf("%v:%v %v", frame.File, frame.Line, TrimPath(frame.Function))
 }
 
 // GetDefaultOptions returns default configuration options for the client.
 func GetDefaultOptions() Options {
 	return Options{
-		Level:      DefaultLevel,
-		TimeFormat: DefaultTimeFormat,
-		AddCaller:  DefaultAddCaller,
-		Skip:       DefaultSkip,
-		Now:        time.Now,
-		Cores:      []*Core{NewTermCore()},
+		Level:       DefaultLevel,
+		TimeFormat:  DefaultTimeFormat,
+		AddCaller:   DefaultAddCaller,
+		Skip:        DefaultSkip,
+		Now:         time.Now,
+		FormatFrame: DefaultFormatFrame,
+		Cores:       []*Core{NewTermCore()},
 	}
 }

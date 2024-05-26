@@ -56,48 +56,28 @@ func (s *Shader) do(content string) string {
 	defer cache.close()
 
 	cache.WriteString(s.color + content + "\033[0m")
-
-	//fmt.Fprint(cache, "\033[0;")
-	//fmt.Fprintf(cache, "%d", s.color[0])
-	//for i := 1; i < len(s.color); i++ {
-	//	fmt.Fprintf(cache, ";%d", s.color[i])
-	//}
-	//fmt.Fprint(cache, "m", content, "\033[0m")
-
 	return cache.String()
 }
 
 var (
+	callerShader = Shader{
+		color: "\033[0;0;37;49m",
+	}
+
 	infoShader = Shader{
 		color: "\033[0;0;97;42m",
-		//color: []int{
-		//	FGC_LIGHTWHITE,
-		//	BGC_GREEN,
-		//},
 	}
 
 	debugShader = Shader{
 		color: "\033[0;0;97;44m",
-		//color: []int{
-		//	FGC_LIGHTWHITE,
-		//	BGC_LIGHTGREY,
-		//},
 	}
 
 	warnShader = Shader{
 		color: "\033[0;0;97;43m",
-		//color: []int{
-		//	FGC_LIGHTWHITE,
-		//	BGC_YELLOW,
-		//},
 	}
 
 	errorShader = Shader{
 		color: "\033[0;0;97;41m",
-		//color: []int{
-		//	FGC_LIGHTWHITE,
-		//	BGC_RED,
-		//},
 	}
 )
 

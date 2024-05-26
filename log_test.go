@@ -111,7 +111,7 @@ func TestNamedFileLoggerFunctions(t *testing.T) {
 			logger.Warn("warn message")
 		}
 	}()
-	logger.Panic("panic", "panic message")
+	logger.Panic("panic message")
 }
 
 func TestLogFunctions(t *testing.T) {
@@ -154,6 +154,10 @@ func TestLogFunctions(t *testing.T) {
 	}()
 	buf.Reset()
 	Panic("panic", "panic message")
+}
+
+func TestFatal(t *testing.T) {
+	Fatal("fatal message")
 }
 
 func TestAddFileLogger(t *testing.T) {

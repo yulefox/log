@@ -15,7 +15,7 @@ func TrimPath(file string) string {
 	return file[idx+1:]
 }
 
-func GetStack(skip int, depth int) (stack []string) {
+func getStack(skip int, depth int) (stack []runtime.Frame) {
 	pc := make([]uintptr, depth)
 	n := runtime.Callers(skip, pc)
 	if n == 0 {
@@ -25,16 +25,24 @@ func GetStack(skip int, depth int) (stack []string) {
 	frames := runtime.CallersFrames(pc[:n])
 	for {
 		frame, more := frames.Next()
+		stack = append(stack, frame)
+		if !more {
+			break
+		}
+	}
+
+	return
+}
+
+func GetStack(skip int, depth int) (stack []string) {
+	rawStack := getStack(skip, depth)
+	for _, frame := range rawStack {
 		caller := fmt.Sprintf("%v %v:%v",
 			TrimPath(frame.Function),
 			frame.File,
 			frame.Line,
 		)
 		stack = append(stack, caller)
-		if !more {
-			break
-		}
 	}
-
 	return
 }

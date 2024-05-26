@@ -6,7 +6,7 @@ import (
 )
 
 type Encoder interface {
-	Encode(ac *Entry, params []any) string
+	Encode(entry *Entry, params []any) string
 }
 
 type Core struct {

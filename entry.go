@@ -1,6 +1,9 @@
 package log
 
-import "os"
+import (
+	"os"
+	"runtime"
+)
 
 type Entry struct {
 	*Options
@@ -8,7 +11,7 @@ type Entry struct {
 	Date       string
 	Caller     string
 	Fields     []string
-	Stack      []string
+	Stack      []runtime.Frame
 	AfterWrite func()
 }
 
@@ -23,16 +26,11 @@ func (e *Entry) log(level Level, params ...any) {
 	}
 
 	if e.AddCaller || e.Level >= ERRO {
-		depth := 1
-		if e.Level >= ERRO {
-			depth = 10
-		}
-		stack := GetStack(e.Skip, depth)
+		stack := getStack(e.Skip, 10)
 		if len(stack) > 0 {
 			if e.AddCaller {
-				e.Caller = stack[0]
+				e.Caller = e.FormatFrame(stack[0])
 			}
-
 			switch e.Level {
 			case ERRO, FATL, PNIC:
 				e.Stack = stack

@@ -49,23 +49,23 @@ func NewFileCore(name string, writers ...io.Writer) *Core {
 	return core
 }
 
-func (e *FileEncoder) Encode(ac *Entry, params []any) string {
-	if ac == nil {
+func (e *FileEncoder) Encode(entry *Entry, params []any) string {
+	if entry == nil {
 		return ""
 	}
 
 	w := bufferPool.Get().(*Buffer)
 	defer w.close()
 
-	if ac.Date != "" {
-		w.WriteString(ac.Date + " ")
+	if entry.Date != "" {
+		w.WriteString(entry.Date + " ")
 	}
-	w.WriteString(ac.Level.String())
-	if ac.AddCaller && ac.Caller != "" {
-		w.WriteString(" " + ac.Caller)
+	w.WriteString(entry.Level.String())
+	if entry.AddCaller {
+		w.WriteString(" " + entry.Caller)
 	}
-	if len(ac.Fields) > 0 {
-		w.WriteString(" [" + strings.Join(ac.Fields, " ") + "]")
+	if len(entry.Fields) > 0 {
+		w.WriteString(" [" + strings.Join(entry.Fields, " ") + "]")
 	}
 
 	if params != nil {
@@ -82,7 +82,7 @@ func (e *FileEncoder) Encode(ac *Entry, params []any) string {
 		}
 	}
 
-	for i, layer := range ac.Stack {
+	for i, layer := range entry.Stack {
 		if _, err := fmt.Fprintf(w, "\n %2d %v", i+1, layer); err != nil {
 			return ""
 		}

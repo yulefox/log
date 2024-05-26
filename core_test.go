@@ -57,7 +57,7 @@ func TestCoreWriteWithNilEntry(t *testing.T) {
 
 type TestEncoder struct{}
 
-func (e *TestEncoder) Encode(ac *Entry, params []any) string {
+func (e *TestEncoder) Encode(entry *Entry, params []any) string {
 	w := bufferPool.Get().(*Buffer)
 	defer w.close()
 	if _, err := fmt.Fprint(w, params...); err != nil {

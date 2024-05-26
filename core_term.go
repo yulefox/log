@@ -33,13 +33,6 @@ func (e *TermEncoder) Encode(entry *Entry, params []any) string {
 	} else {
 		w.WriteString(entry.Level.String())
 	}
-	if entry.AddCaller && entry.Caller != "" {
-		w.WriteString(" " + entry.Caller)
-	}
-	if len(entry.Fields) > 0 {
-		w.WriteString(" [" + strings.Join(entry.Fields, " ") + "]")
-	}
-
 	if params != nil {
 		w.WriteString(" ")
 		format, ok := params[0].(string)
@@ -53,9 +46,15 @@ func (e *TermEncoder) Encode(entry *Entry, params []any) string {
 			}
 		}
 	}
+	if entry.AddCaller {
+		w.WriteString(callerShader.do(" " + entry.Caller))
+	}
+	if len(entry.Fields) > 0 {
+		w.WriteString(" [" + strings.Join(entry.Fields, " ") + "]")
+	}
 
-	for i, layer := range entry.Stack {
-		if _, err := fmt.Fprintf(w, "\n\033[31m%2v %v\033[0m", i+1, layer); err != nil {
+	for i, frame := range entry.Stack {
+		if _, err := fmt.Fprintf(w, "\n\033[31m%2v %v %v:%d\033[0m", i+1, TrimPath(frame.Function), frame.File, frame.Line); err != nil {
 			return ""
 		}
 	}
