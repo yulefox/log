@@ -7,10 +7,9 @@ import (
 )
 
 const (
-	DefaultName       = ""
 	DefaultLevel      = DEBU
 	DefaultSkip       = 4
-	DefaultAddCaller  = false
+	DefaultAddCaller  = true
 	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 

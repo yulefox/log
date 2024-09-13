@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"io"
 	"os"
 	"sync"
@@ -14,12 +15,24 @@ const (
 )
 
 var (
-	_logger    atomic.Pointer[Logger]
-	_entryPool sync.Pool
+	_logger       atomic.Pointer[Logger]
+	_namedLoggers sync.Map
+	_entryPool    sync.Pool
 )
 
 type Logger struct {
-	Options Options `json:"options"`
+	context.Context
+	cancel  context.CancelFunc
+	logs    chan *Entry
+	options Options
+}
+
+// SetName Set the name of logger
+func SetName(name string) Option {
+	return func(o *Options) error {
+		o.Name = name
+		return nil
+	}
 }
 
 // SetCaller Set whether to show caller
@@ -50,6 +63,9 @@ func SetTimeFormat(format string, nowFunc func() time.Time) Option {
 // AddFileLogger Add file logger
 func AddFileLogger(name string, writers ...io.Writer) Option {
 	return func(o *Options) error {
+		if name == "" && o.Name != "" {
+			name = o.Name
+		}
 		o.Cores = append(o.Cores, NewFileCore(name, writers...))
 		return nil
 	}
@@ -73,95 +89,216 @@ func Init(options ...Option) *Logger {
 		}
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	logger := &Logger{
-		Options: opts,
+		Context: ctx,
+		cancel:  cancel,
+		options: opts,
+		logs:    make(chan *Entry, 1024),
 	}
-	_logger.Store(logger)
+	if opts.Name != "" {
+		_namedLoggers.Store(opts.Name, logger)
+	} else {
+		_logger.Store(logger)
+	}
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case e, ok := <-logger.logs:
+				e.log()
+				putEntry(e)
+				if !ok {
+					return
+				}
+			}
+		}
+	}()
 	return logger
 }
 
-func getLogger(options ...Option) *Logger {
+func Fini() {
+	if logger := _logger.Load(); logger != nil {
+		logger.cancel()
+	}
+	_namedLoggers.Range(func(key, value any) bool {
+		value.(*Logger).cancel()
+		return true
+	})
+}
+
+func GetLogger(name string) *Logger {
+	if logger, ok := _namedLoggers.Load(name); ok {
+		return logger.(*Logger)
+	}
 	if logger := _logger.Load(); logger != nil {
 		return logger
 	}
-
-	return Init(options...)
+	return Init(SetName(name))
 }
 
-func getEntry(options ...Option) *Entry {
-	logger := getLogger(options...)
-	if logger == nil {
-		return nil
+func getDefaultLogger() *Logger {
+	if logger := _logger.Load(); logger != nil {
+		return logger
 	}
-	entry, _ := _entryPool.Get().(*Entry)
-	if entry == nil {
-		entry = &Entry{
-			Options: &logger.Options,
-			channel: make(chan *logEntry, 1024),
-		}
+	return Init()
+}
+
+func getEntry(options *Options) *Entry {
+	entry, ok := _entryPool.Get().(*Entry)
+	if ok {
+		entry.Options = options
+		return entry
 	}
-	go func() {
-		select {
-		case data, closed := <-entry.channel:
-			if !closed {
-				putEntry(entry)
-				return
-			}
-			entry._log(data)
-			return
-		}
-	}()
-	return entry
+	return &Entry{
+		Options: options,
+	}
 }
 
 func putEntry(e *Entry) {
 	e.Fields = []string{}
 	e.Stack = []string{}
-	e.channel = make(chan *logEntry, 1024)
 	e.AfterWrite = nil
 	_entryPool.Put(e)
 }
 
+func (l *Logger) Debug(params ...any) {
+	if l.options.Level > DEBU {
+		return
+	}
+	if e := getEntry(&l.options); e != nil {
+		l.log(e, DEBU, params...)
+	}
+}
+
+func (l *Logger) Info(params ...any) {
+	if l.options.Level > INFO {
+		return
+	}
+	if e := getEntry(&l.options); e != nil {
+		l.log(e, INFO, params...)
+	}
+}
+
+func (l *Logger) Warn(params ...any) {
+	if l.options.Level > WARN {
+		return
+	}
+	if e := getEntry(&l.options); e != nil {
+		l.log(e, WARN, params...)
+	}
+}
+
+func (l *Logger) Error(params ...any) {
+	if e := getEntry(&l.options); e != nil {
+		l.log(e, ERRO, params...)
+	}
+}
+
+func (l *Logger) Panic(params ...any) {
+	if e := getEntry(&l.options); e != nil {
+		l.log(e, PNIC, params...)
+	}
+	panic(params)
+}
+
+func (l *Logger) Fatal(params ...any) {
+	if e := getEntry(&l.options); e != nil {
+		l.log(e, FATL, params...)
+	}
+	os.Exit(1)
+}
+
+func (l *Logger) log(e *Entry, level Level, params ...any) {
+	e.Level = level
+	e.Params = params
+
+	if e.TimeFormat != "" {
+		e.Date = e.Now().Format(e.TimeFormat)
+	}
+
+	if e.AddCaller || e.Level >= ERRO {
+		stack := GetStack(e.Skip, 10)
+		if len(stack) > 0 {
+			if e.AddCaller {
+				e.Caller = e.FormatFrame(stack[0])
+			}
+			switch e.Level {
+			case ERRO, FATL, PNIC:
+				e.Stack = toStrings(stack)
+			default:
+			}
+		}
+	}
+	select {
+	case l.logs <- e:
+	case <-time.After(1 * time.Second):
+		return
+	}
+}
+
 func Debug(params ...any) {
-	if e := getEntry(); e != nil {
-		defer putEntry(e)
-		e.log(DEBU, params...)
+	l := getDefaultLogger()
+	if l != nil {
+		if l.options.Level > DEBU {
+			return
+		}
+		if e := getEntry(&l.options); e != nil {
+			l.log(e, DEBU, params...)
+		}
 	}
 }
 
 func Info(params ...any) {
-	if e := getEntry(); e != nil {
-		defer putEntry(e)
-		e.log(INFO, params...)
+	l := getDefaultLogger()
+	if l != nil {
+		if l.options.Level > INFO {
+			return
+		}
+		if e := getEntry(&l.options); e != nil {
+			l.log(e, INFO, params...)
+		}
 	}
 }
 
 func Warn(params ...any) {
-	if e := getEntry(); e != nil {
-		defer putEntry(e)
-		e.log(WARN, params...)
+	l := getDefaultLogger()
+	if l != nil {
+		if l.options.Level > WARN {
+			return
+		}
+		if e := getEntry(&l.options); e != nil {
+			l.log(e, WARN, params...)
+		}
 	}
 }
 
 func Error(params ...any) {
-	if e := getEntry(); e != nil {
-		defer putEntry(e)
-		e.log(ERRO, params...)
+	l := getDefaultLogger()
+	if l != nil {
+		if e := getEntry(&l.options); e != nil {
+			l.log(e, ERRO, params...)
+		}
 	}
 }
 
 func Panic(params ...any) {
-	if e := getEntry(); e != nil {
-		defer putEntry(e)
-		e.log(PNIC, params...)
+	l := getDefaultLogger()
+	if l != nil {
+		if e := getEntry(&l.options); e != nil {
+			l.log(e, PNIC, params...)
+		}
 	}
 	panic(params)
 }
 
 func Fatal(params ...any) {
-	if e := getEntry(); e != nil {
-		defer putEntry(e)
-		e.log(FATL, params...)
+	l := getDefaultLogger()
+	if l != nil {
+		if e := getEntry(&l.options); e != nil {
+			l.log(e, FATL, params...)
+		}
 	}
 	os.Exit(1)
 }

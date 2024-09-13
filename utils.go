@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"runtime"
 	"strings"
 )
@@ -12,6 +13,19 @@ func TrimPath(file string) string {
 	}
 
 	return file[idx+1:]
+}
+
+func GetStackInString(skip int, depth int) (stack []string) {
+	rawStack := GetStack(skip, depth)
+	for _, frame := range rawStack {
+		caller := fmt.Sprintf("%v %v:%v",
+			TrimPath(frame.Function),
+			frame.File,
+			frame.Line,
+		)
+		stack = append(stack, caller)
+	}
+	return
 }
 
 func GetStack(skip int, depth int) (stack []runtime.Frame) {
