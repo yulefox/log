@@ -3,6 +3,7 @@ package log
 import (
 	"encoding/json"
 	"io"
+	"strings"
 	"unsafe"
 )
 
@@ -25,17 +26,22 @@ func NewJsonCore(writer io.Writer) *Core {
 	}
 }
 
-func (e *JsonEncoder) Encode(ac *Entry, params []any) string {
-	if ac == nil {
+func (e *JsonEncoder) Encode(entry *Entry, params []any) string {
+	if entry == nil {
 		return ""
+	}
+	if params != nil {
+		format, ok := params[0].(string)
+		if ok && strings.ContainsRune(format, '%') {
+			params = params[1:]
+		}
 	}
 
 	buf, err := json.Marshal(&structureLog{
-		Date:   ac.Date,
-		Level:  ac.Level,
-		Caller: ac.Caller,
-		Fields: ac.Fields,
-		Stack:  ac.Stack,
+		Date:   entry.Date,
+		Level:  entry.Level,
+		Caller: entry.Caller,
+		Fields: entry.Fields,
 		Params: params,
 	})
 

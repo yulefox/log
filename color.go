@@ -60,6 +60,10 @@ func (s *Shader) do(content string) string {
 }
 
 var (
+	callerShader = Shader{
+		color: "\033[0;0;37;49m",
+	}
+
 	infoShader = Shader{
 		color: "\033[0;0;97;42m",
 	}

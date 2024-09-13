@@ -1,12 +1,16 @@
 package log
 
-import "time"
+import (
+	"fmt"
+	"runtime"
+	"time"
+)
 
 const (
 	DefaultName       = ""
 	DefaultLevel      = DEBU
-	DefaultSkip       = 3
-	DefaultAddCaller  = true
+	DefaultSkip       = 4
+	DefaultAddCaller  = false
 	DefaultTimeFormat = "2006-01-02 15:04:05.000"
 )
 
@@ -15,6 +19,9 @@ type Option func(*Options) error
 
 // Options can be used to create a customized logger.
 type Options struct {
+	// Name is the name of the logger.
+	Name string
+
 	// TimeFormat is the time format for log entries.
 	TimeFormat string
 
@@ -31,16 +38,23 @@ type Options struct {
 	Cores []*Core
 
 	Now func() time.Time
+
+	FormatFrame func(runtime.Frame) string
+}
+
+func DefaultFormatFrame(frame runtime.Frame) string {
+	return fmt.Sprintf("%v:%v %v", frame.File, frame.Line, TrimPath(frame.Function))
 }
 
 // GetDefaultOptions returns default configuration options for the client.
 func GetDefaultOptions() Options {
 	return Options{
-		Level:      DefaultLevel,
-		TimeFormat: DefaultTimeFormat,
-		AddCaller:  DefaultAddCaller,
-		Skip:       DefaultSkip,
-		Now:        time.Now,
-		Cores:      []*Core{NewTermCore()},
+		Level:       DefaultLevel,
+		TimeFormat:  DefaultTimeFormat,
+		AddCaller:   DefaultAddCaller,
+		Skip:        DefaultSkip,
+		Now:         time.Now,
+		FormatFrame: DefaultFormatFrame,
+		Cores:       []*Core{NewTermCore()},
 	}
 }

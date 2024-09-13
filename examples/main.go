@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/yulefox/log"
 	"sync"
 	"time"
+
+	"github.com/yulefox/log"
 )
 
 func main() {
@@ -13,7 +14,13 @@ func main() {
 		log.SetTimeFormat("2006-01-02 15:04:05", time.Now().UTC),
 		log.AddFileLogger("app"),
 		log.AddFileLogger("test"),
-		//log.AddJsonLogger(os.Stdout),
+		//log.AddJsonLogger(&lumberjack.Logger{
+		//	Filename:   "logs/app_json.log", // 日志文件路径
+		//	MaxSize:    1,           // 日志文件最大大小(MB)
+		//	MaxBackups: 100,         // 保留旧文件的最大个数
+		//	MaxAge:     28,          // 保留旧文件的最大天数
+		//	Compress:   false,       // 是否压缩/归档旧文件
+		//}),
 	)
 
 	log.Info("", "Here is a simple example.")

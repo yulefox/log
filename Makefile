@@ -9,13 +9,14 @@ VERSION_PKG := github.com/yulefox/log
 TEST_FOLDER := $(shell $(GO) list ./... | grep -v examples)
 TEST_TAGS ?= ""
 
-.PHONY: all build clean
-
+.PHONY: all
 all: build
 
+.PHONY: build
 build:
 	GOARCH=$(GOARCH) GOOS=$(GOOS) $(GO) build -gcflags=all="-N -l" -ldflags "-s -w -X '$(VERSION_PKG).Version=$(VERSION)'" ./...
 
+.PHONY: test
 test:
 	echo "mode: count" > coverage.out
 	for d in $(TEST_FOLDER); do \
