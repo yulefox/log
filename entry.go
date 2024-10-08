@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 )
 
@@ -39,12 +38,5 @@ func (e *Entry) log() {
 
 	if e.AfterWrite != nil {
 		e.AfterWrite()
-	}
-	switch e.Level {
-	case FATL:
-		os.Exit(1)
-	case PNIC:
-		panic(e.Params)
-	default:
 	}
 }
