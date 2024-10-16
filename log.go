@@ -79,6 +79,14 @@ func AddJsonLogger(writer io.Writer) Option {
 	}
 }
 
+// AddCustomLogger Add custom logger
+func AddCustomLogger(writer *Core) Option {
+	return func(o *Options) error {
+		o.Cores = append(o.Cores, writer)
+		return nil
+	}
+}
+
 func Init(options ...Option) *Logger {
 	opts := GetDefaultOptions()
 	for _, opt := range options {
