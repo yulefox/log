@@ -80,9 +80,11 @@ func AddJsonLogger(writer io.Writer) Option {
 }
 
 // AddCustomLogger Add custom logger
-func AddCustomLogger(writer *Core) Option {
+func AddCustomLogger(logger Encoder) Option {
 	return func(o *Options) error {
-		o.Cores = append(o.Cores, writer)
+		o.Cores = append(o.Cores, &Core{
+			encoder: logger,
+		})
 		return nil
 	}
 }
