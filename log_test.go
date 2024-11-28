@@ -108,6 +108,7 @@ func TestNamedFileLoggerFunctions(t *testing.T) {
 	logger.Info("info message: %s", "hello, world")
 	logger.Warn("warn message")
 	logger.Error("error message")
+	logger.Fatal("error message")
 
 	time.Sleep(5 * time.Second)
 	defer func() {

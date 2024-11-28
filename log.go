@@ -214,10 +214,10 @@ func (l *Logger) Panic(params ...any) {
 }
 
 func (l *Logger) Fatal(params ...any) {
+	defer os.Exit(1)
 	if e := getEntry(&l.options); e != nil {
 		l.log(e, FATL, params...)
 	}
-	os.Exit(1)
 }
 
 func (l *Logger) log(e *Entry, level Level, params ...any) {
@@ -240,6 +240,10 @@ func (l *Logger) log(e *Entry, level Level, params ...any) {
 			default:
 			}
 		}
+	}
+	if e.Level == FATL {
+		e.log()
+		return
 	}
 	select {
 	case l.logs <- e:
@@ -304,11 +308,11 @@ func Panic(params ...any) {
 }
 
 func Fatal(params ...any) {
+	defer os.Exit(1)
 	l := getDefaultLogger()
 	if l != nil {
 		if e := getEntry(&l.options); e != nil {
 			l.log(e, FATL, params...)
 		}
 	}
-	os.Exit(1)
 }
