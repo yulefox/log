@@ -16,6 +16,7 @@ func TestInit(t *testing.T) {
 	}
 
 	Debug("debug message")
+	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "debug message") {
 		t.Errorf("Expected 'debug message' to be in log output")
 	}
@@ -29,13 +30,14 @@ func TestInit(t *testing.T) {
 		options.Cores = append(options.Cores, nil)
 		return nil
 	})
-	if logger.options.Cores == nil || len(logger.options.Cores) == 0 || logger.options.Cores[len(logger.options.Cores)-1] != nil {
+	if len(logger.options.Cores) == 0 || logger.options.Cores[len(logger.options.Cores)-1] != nil {
 		t.Errorf("Expected Cores to contain a nil core, got %v", logger.options.Cores)
 	}
 
 	buf.Reset()
 	Init(SetLevel(DEBU), AddJsonLogger(&buf), SetCaller(true))
 	Info("info message")
+	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "info message") {
 		t.Errorf("Expected 'info message' to be in log output")
 	}
@@ -61,6 +63,7 @@ func TestNamedLoggerFunctions(t *testing.T) {
 	logger := Init(SetName("hello"), SetTimeFormat("2006-01-02 15:04:05.000000000", time.Now().UTC), SetLevel(INFO), AddFileLogger("test", &buf), AddFileLogger("test", &bufError))
 
 	logger.Debug("debug message")
+	time.Sleep(100 * time.Millisecond)
 	if buf.Len() != 0 {
 		t.Errorf("Expected no log output for DEBUG level")
 	}
@@ -72,23 +75,27 @@ func TestNamedLoggerFunctions(t *testing.T) {
 
 	buf.Reset()
 	logger.Warn("warn message")
+	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "warn message") {
 		t.Errorf("Expected 'warn message' to be in log output")
 	}
 
 	bufError.Reset()
 	logger.Error("error message")
+	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(bufError.String(), "error message") {
 		t.Errorf("Expected 'error message' to be in log output")
 	}
 
 	defer func() {
+		time.Sleep(100 * time.Millisecond)
 		if !strings.Contains(bufError.String(), "panic message") {
 			t.Errorf("Expected 'panic message' to be in log output")
 		}
 		if err := recover(); err != nil {
 			buf.Reset()
 			logger.Warn("warn message")
+			time.Sleep(100 * time.Millisecond)
 			if !strings.Contains(buf.String(), "warn message") {
 				t.Errorf("Expected 'warn message' to be in log output")
 			}
@@ -125,23 +132,27 @@ func TestLogFunctions(t *testing.T) {
 	Init(SetLevel(INFO), AddFileLogger("test", &buf))
 
 	Debug("debug message")
+	time.Sleep(100 * time.Millisecond)
 	if buf.Len() != 0 {
 		t.Errorf("Expected no log output for DEBUG level")
 	}
 
 	Info("info message: %s", "hello, world")
+	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "info message: hello, world") {
 		t.Errorf("Expected 'info message: hello, world' to be in log output, get %s", buf.String())
 	}
 
 	buf.Reset()
 	Warn("warn message")
+	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "warn message") {
 		t.Errorf("Expected 'warn message' to be in log output")
 	}
 
 	buf.Reset()
 	Error("error message")
+	time.Sleep(100 * time.Millisecond)
 	if !strings.Contains(buf.String(), "error message") {
 		t.Errorf("Expected 'error message' to be in log output")
 	}
@@ -153,6 +164,7 @@ func TestLogFunctions(t *testing.T) {
 		if err := recover(); err != nil {
 			buf.Reset()
 			Warn("warn message")
+			time.Sleep(100 * time.Millisecond)
 			if !strings.Contains(buf.String(), "warn message") {
 				t.Errorf("Expected 'warn message' to be in log output")
 			}

@@ -1,8 +1,11 @@
 package log
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
-type Level int
+type Level uint32
 
 const (
 	DEBU Level = iota // default level
@@ -12,6 +15,26 @@ const (
 	PNIC
 	FATL
 )
+
+func StringToLevel(logLevel string) Level {
+
+	switch strings.ToLower(logLevel) {
+	case "panic", "pani":
+		return PNIC
+	case "fatal", "fata":
+		return FATL
+	case "error":
+		return ERRO
+	case "warning", "warn":
+		return WARN
+	case "info":
+		return INFO
+	case "debug", "debu":
+		return DEBU
+	default:
+		return INFO
+	}
+}
 
 func (l Level) String() string {
 	switch l {

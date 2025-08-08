@@ -173,8 +173,18 @@ func putEntry(e *Entry) {
 	_entryPool.Put(e)
 }
 
+// SetLevel sets the logger level.
+func (l *Logger) SetLevel(level Level) {
+	atomic.StoreUint32((*uint32)(&l.options.Level), uint32(level))
+}
+
+// GetLevel returns the logger level.
+func (l *Logger) GetLevel() Level {
+	return Level(atomic.LoadUint32((*uint32)(&l.options.Level)))
+}
+
 func (l *Logger) Debug(params ...any) {
-	if l.options.Level > DEBU {
+	if l.GetLevel() > DEBU {
 		return
 	}
 	if e := getEntry(&l.options); e != nil {
@@ -183,7 +193,7 @@ func (l *Logger) Debug(params ...any) {
 }
 
 func (l *Logger) Info(params ...any) {
-	if l.options.Level > INFO {
+	if l.GetLevel() > INFO {
 		return
 	}
 	if e := getEntry(&l.options); e != nil {
@@ -192,7 +202,7 @@ func (l *Logger) Info(params ...any) {
 }
 
 func (l *Logger) Warn(params ...any) {
-	if l.options.Level > WARN {
+	if l.GetLevel() > WARN {
 		return
 	}
 	if e := getEntry(&l.options); e != nil {
@@ -255,7 +265,7 @@ func (l *Logger) log(e *Entry, level Level, params ...any) {
 func Debug(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
-		if l.options.Level > DEBU {
+		if l.GetLevel() > DEBU {
 			return
 		}
 		if e := getEntry(&l.options); e != nil {
@@ -267,7 +277,7 @@ func Debug(params ...any) {
 func Info(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
-		if l.options.Level > INFO {
+		if l.GetLevel() > INFO {
 			return
 		}
 		if e := getEntry(&l.options); e != nil {
@@ -279,7 +289,7 @@ func Info(params ...any) {
 func Warn(params ...any) {
 	l := getDefaultLogger()
 	if l != nil {
-		if l.options.Level > WARN {
+		if l.GetLevel() > WARN {
 			return
 		}
 		if e := getEntry(&l.options); e != nil {
